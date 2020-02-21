@@ -1,0 +1,83 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Symfony\Component\Console\Style\SymfonyStyle;
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+const DNS_SERVERS = [
+    [
+        'name' =>'Bouygues Telecom',
+        'servers' => ['194.158.122.10', '194.158.122.15'],
+    ],
+    [
+        'name' =>'Cloudflare',
+        'servers' => ['1.1.1.1'],
+    ],
+    [
+        'name' =>'Free' ,
+        'servers' => ['212.27.40.240', '212.27.40.241'],
+    ],
+    [
+        'name' =>'Google',
+        'servers' => ['8.8.8.8', '8.8.4.4'],
+    ],
+    [
+        'name' =>'Numericable',
+        'servers' => ['89.2.0.1', '89.2.0.2'],
+    ],
+    [
+        'name' =>'OpenDNS',
+        'servers' => ['208.67.222.222', '208.67.220.220'],
+    ],
+    [
+        'name' =>'Orange',
+        'servers' => ['80.10.246.2', '80.10.246.129'],
+    ],
+    [
+        'name' =>'SFR',
+        'servers' => ['109.0.66.10', '109.0.66.20'],
+    ],
+];
+
+$app = new Silly\Application();
+
+$app->command('check [domain]', function(SymfonyStyle $io, string $domain): void {
+    $loop = React\EventLoop\Factory::create();
+    $factory = new React\Dns\Resolver\Factory();
+
+    $promises = [];
+    foreach (DNS_SERVERS as $provider) {
+        $name = $provider['name'];
+        foreach ($provider['servers'] as $dns) {
+            $resolver = $factory->create('1.1.1.1', $loop);
+            $promises[] = $resolver->resolve($domain)->then(function(string $ip) use ($name, $dns): array {
+                return [
+                    'provider' => $name,
+                    'server' => $dns,
+                    'ip' => $ip,
+                ];
+            });
+        }
+    }
+
+    React\Promise\all($promises)->then(function(array $ips) use ($io): void {
+        $values = [];
+        foreach ($ips as $data) {
+            $provider = $data['provider'];
+            if (!isset($values[$provider])) {
+                $values[$provider] = [$provider];
+            }
+
+            $values[$provider][] = $data['ip'];
+        }
+
+        $io->table(['Provider', 'Primary', 'Secondary'], $values);
+    });
+
+    $loop->run();
+});
+
+$app->run();
