@@ -44,7 +44,7 @@ const DNS_SERVERS = [
 
 $app = new Silly\Application();
 
-$app->command('check [domain]', function(SymfonyStyle $io, string $domain): void {
+$app->command('check domain [-e|--expected=]', function(SymfonyStyle $io, string $domain, ?string $expected = null): void {
     $loop = React\EventLoop\Factory::create();
     $factory = new React\Dns\Resolver\Factory();
 
@@ -63,7 +63,7 @@ $app->command('check [domain]', function(SymfonyStyle $io, string $domain): void
         }
     }
 
-    React\Promise\all($promises)->then(function(array $ips) use ($io): void {
+    React\Promise\all($promises)->then(function(array $ips) use ($io, $expected): void {
         $values = [];
         foreach ($ips as $data) {
             $provider = $data['provider'];
@@ -71,7 +71,12 @@ $app->command('check [domain]', function(SymfonyStyle $io, string $domain): void
                 $values[$provider] = [$provider];
             }
 
-            $values[$provider][] = $data['ip'];
+            $color = 'default';
+            if (null !== $expected) {
+                $color = ($expected === $data['ip']) ? 'green' : 'red';
+            }
+
+            $values[$provider][] = "<fg=$color>{$data['ip']}</>";
         }
 
         $io->table(['Provider', 'Primary', 'Secondary'], $values);
