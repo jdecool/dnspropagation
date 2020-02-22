@@ -48,6 +48,9 @@ $app->command('check domain [-e|--expected=]', function(SymfonyStyle $io, string
     $loop = React\EventLoop\Factory::create();
     $factory = new React\Dns\Resolver\Factory();
 
+    $stopwatch = new Symfony\Component\Stopwatch\Stopwatch();
+    $stopwatch->start('resolution');
+
     $promises = [];
     foreach (DNS_SERVERS as $provider) {
         $name = $provider['name'];
@@ -63,7 +66,9 @@ $app->command('check domain [-e|--expected=]', function(SymfonyStyle $io, string
         }
     }
 
-    React\Promise\all($promises)->then(function(array $ips) use ($io, $expected): void {
+    React\Promise\all($promises)->then(function(array $ips) use ($io, $stopwatch, $expected): void {
+        $event = $stopwatch->stop('resolution');
+
         $values = [];
         foreach ($ips as $data) {
             $provider = $data['provider'];
@@ -80,9 +85,12 @@ $app->command('check domain [-e|--expected=]', function(SymfonyStyle $io, string
         }
 
         $io->table(['Provider', 'Primary', 'Secondary'], $values);
+
+        $duration = round($event->getDuration() / 1000, 2);
+        $io->writeln("<info>Time: $duration seconds</info>");
     });
 
     $loop->run();
-});
+})->descriptions('Querying the Domain Name System (DNS) to obtain IP address mapping');
 
 $app->run();
