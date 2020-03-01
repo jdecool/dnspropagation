@@ -14,5 +14,11 @@ $ composer install
 Then use it:
 
 ```bash
-$ php bin/propagation [domain]
+$ php bin/propagation check [domain]
+```
+
+You can also specify the exepected DNS resolution by using the `--expected` option:
+
+```bash
+$ php bin/propagation check [domain] --expected=[ip]
 ```
