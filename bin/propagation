@@ -59,7 +59,7 @@ $app->command('check domain [-e|--expected=]', function(SymfonyStyle $io, string
     foreach (DNS_SERVERS as $provider) {
         $name = $provider['name'];
         foreach ($provider['servers'] as $dns) {
-            $resolver = $factory->create('1.1.1.1', $loop);
+            $resolver = $factory->create($dns, $loop);
             $promises[] = $resolver->resolve($domain)->then(function(string $ip) use ($name, $dns): array {
                 return [
                     'provider' => $name,
