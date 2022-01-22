@@ -77,7 +77,7 @@ const DNS_SERVERS = [
 $app = new Silly\Application();
 
 $app->command('check domain [-e|--expected=]', function(SymfonyStyle $io, string $domain, ?string $expected = null): void {
-    $loop = React\EventLoop\Factory::create();
+    $loop = React\EventLoop\Loop::get();
     $factory = new React\Dns\Resolver\Factory();
 
     $stopwatch = new Symfony\Component\Stopwatch\Stopwatch();
