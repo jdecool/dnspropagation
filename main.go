@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
-	"os"
 	"sort"
 	"strings"
 	"sync"
@@ -14,6 +14,10 @@ import (
 	"github.com/jdecool/dnspropagation/internal/dns"
 )
 
+var (
+	configFile string
+)
+
 type DNSResult struct {
 	Provider  string
 	Primary   string
@@ -21,16 +25,19 @@ type DNSResult struct {
 }
 
 func main() {
-	if len(os.Args) < 2 {
+	flag.StringVar(&configFile, "config", "", "Configuration file to use")
+	flag.Parse()
+
+	if len(flag.Args()) != 1 {
 		panic("Missing domain argument.")
 	}
 
-	domain := os.Args[1]
+	domain := flag.Arg(0)
 	if strings.TrimSpace(domain) == "" {
 		panic("Missing domain argument.")
 	}
 
-	config, err := configuration.Load("conf/servers.hcl")
+	config, err := configuration.Load(configFile)
 	if err != nil {
 		panic(err)
 	}

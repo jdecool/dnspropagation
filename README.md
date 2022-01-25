@@ -22,7 +22,7 @@ $ ./dnspropagation [domain]
 You can also run it without compilation:
 
 ```
-$ go run main.go [domain]
+$ go run main.go [-config path/to/configuration/file.hcl] [domain]
 ```
 
 # Output
@@ -43,4 +43,38 @@ Quad9             140.82.112.3    140.82.112.4
 Verisign          140.82.113.4    140.82.121.4
 
 Time: 5.03 seconds
+```
+
+# Configuration sample
+
+```hcl
+dns {
+  name = "Cloudflare"
+
+  server {
+    protocol = "udp"
+    primary = "1.1.1.1:53"
+    secondary = "1.0.0.1:53"
+  }
+}
+
+dns {
+  name = "Google"
+
+  server {
+    protocol = "udp"
+    primary = "8.8.8.8:53"
+    secondary = "8.8.4.4:53"
+  }
+}
+
+dns {
+  name = "OpenDNS"
+
+  server {
+    protocol = "udp"
+    primary = "208.67.222.222:53"
+    secondary = "208.67.220.220:53"
+  }
+}
 ```

@@ -1,6 +1,11 @@
 package configuration
 
-import "github.com/hashicorp/hcl/v2/hclsimple"
+import (
+	"errors"
+	"strings"
+
+	"github.com/hashicorp/hcl/v2/hclsimple"
+)
 
 type Config struct {
 	Providers []DNSProvider `hcl:"dns,block"`
@@ -18,6 +23,10 @@ type Server struct {
 }
 
 func Load(file string) (*Config, error) {
+	if strings.TrimSpace(file) == "" {
+		return nil, errors.New("Configuration file is required.")
+	}
+
 	var config Config
 	err := hclsimple.DecodeFile(file, nil, &config)
 	if err != nil {
